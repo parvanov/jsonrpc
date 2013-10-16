@@ -85,7 +85,7 @@ public class GsonTypeChecker extends TypeChecker {
         }
 
         boolean zeroArgConstructor = (clazz.getConstructors().length == 0);
-        for (Constructor c : clazz.getConstructors()) {
+        for (Constructor<?> c : clazz.getConstructors()) {
             if (c.getParameterTypes().length == 0) {
                 zeroArgConstructor = true;
                 break;
@@ -100,14 +100,12 @@ public class GsonTypeChecker extends TypeChecker {
         }
 
         // avoid circular references
-        visited = (visited == null ? new HashSet<Class<?>>() : visited);
-        if (visited.contains(clazz)) {
-            if (throwException) {
-                throw new IllegalArgumentException("circular reference detected : " + clazz);
-            }
+        if(visited == null) visited = new HashSet<Class<?>>();
+        if (!visited.add(clazz)) {
+            if (throwException)
+				throw new IllegalArgumentException("circular reference detected : " + clazz);
             return false;
         }
-        visited.add(clazz);
 
         // Check for fields because Gson uses fields
         for (Field f : clazz.getDeclaredFields()) {
@@ -142,6 +140,7 @@ public class GsonTypeChecker extends TypeChecker {
             }
         }
 
+        visited.remove(clazz);
 
         return true;
     }
